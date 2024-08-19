@@ -1,4 +1,4 @@
-package com.tbread.facechat.domain.user;
+package com.tbread.facechat.domain.user.entity;
 
 import com.tbread.facechat.domain.common.Timestamped;
 import jakarta.persistence.*;
