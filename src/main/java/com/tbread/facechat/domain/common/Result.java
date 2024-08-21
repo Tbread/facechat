@@ -1,8 +1,10 @@
 package com.tbread.facechat.domain.common;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+@Getter
 public class Result<T> {
     private final String message;
     private final HttpStatus status;
