@@ -1,4 +1,4 @@
-package com.tbread.facechat.domain.authentication;
+package com.tbread.facechat.domain.authentication.userdetails;
 
 import com.tbread.facechat.domain.user.UserRepository;
 import com.tbread.facechat.domain.user.entity.User;
