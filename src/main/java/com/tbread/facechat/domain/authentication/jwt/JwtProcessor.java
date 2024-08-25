@@ -1,12 +1,19 @@
 package com.tbread.facechat.domain.authentication.jwt;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ClaimsBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Map;
-import java.util.Set;
 
 @Component
 public class JwtProcessor {
@@ -36,6 +43,10 @@ public class JwtProcessor {
             return TimeUnitMatcher.get(s).getValue();
         }
 
+    }
+
+    public enum JwtType {
+        ACCESS, REFRESH
     }
 
     private final long ACCESS_TOKEN_VALID_TIME;
@@ -76,4 +87,18 @@ public class JwtProcessor {
         }
 
     }
+
+
+    public String createToken(String username, JwtType type) {
+        Date now = new Date();
+        return Jwts.builder()
+                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                .subject(username)
+                .claims(Map.of("type",type))
+                .issuedAt(now)
+                .expiration(new Date(type.equals(JwtType.ACCESS) ? now.getTime() + ACCESS_TOKEN_VALID_TIME : now.getTime() + REFRESH_TOKEN_VALID_TIME))
+                .compact();
+    }
+
+
 }
