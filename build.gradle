@@ -36,7 +36,8 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     runtimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.40'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+
 }
 
 tasks.named('test') {
