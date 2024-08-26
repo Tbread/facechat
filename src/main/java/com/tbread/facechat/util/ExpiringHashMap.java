@@ -30,4 +30,7 @@ public class ExpiringHashMap<K, V> {
         return map.get(key);
     }
 
+    public boolean contains(K key){
+        return map.containsKey(key);
+    }
 }
