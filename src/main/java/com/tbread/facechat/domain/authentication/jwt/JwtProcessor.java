@@ -2,10 +2,7 @@ package com.tbread.facechat.domain.authentication.jwt;
 
 import com.tbread.facechat.domain.authentication.jwt.entity.RefreshToken;
 import com.tbread.facechat.domain.user.entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ClaimsBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
@@ -119,5 +116,11 @@ public class JwtProcessor {
     private void saveRefreshToken(User user, String token, LocalDateTime expiredAt) {
         RefreshToken refreshToken = RefreshToken.builder().user(user).token(token).expiredAt(expiredAt).build();
         refreshTokenRepository.save(refreshToken);
+    }
+
+    public LocalDateTime getExpiration(String token){
+        Jws<Claims> claims =Jwts.parser().decryptWith(Keys.hmacShaKeyFor(secretKey.getBytes())).build().parseSignedClaims(token);
+        Date expiration = claims.getPayload().getExpiration();
+        return expiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 }
