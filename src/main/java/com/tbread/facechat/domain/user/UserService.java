@@ -1,12 +1,13 @@
 package com.tbread.facechat.domain.user;
 
 import com.tbread.facechat.domain.authentication.jwt.JwtProcessor;
-import com.tbread.facechat.domain.authentication.userdetails.UserDetailsImpl;
 import com.tbread.facechat.domain.common.Result;
+import com.tbread.facechat.domain.common.TokenPackage;
 import com.tbread.facechat.domain.user.dto.request.UsernameAndPasswordRequestDto;
 import com.tbread.facechat.domain.user.dto.response.LoginResponseDto;
 import com.tbread.facechat.domain.user.entity.User;
 import com.tbread.facechat.util.ExpiringHashMap;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,8 +28,6 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
     private final JwtProcessor jwtProcessor;
-
-    private final static ExpiringHashMap<String, Boolean> INVALIDATED_REFRESH_TOKEN = new ExpiringHashMap<>();
 
     public Result<LoginResponseDto> login(HttpServletResponse httpRes, UsernameAndPasswordRequestDto req) {
         Optional<User> userOptional = userRepository.findByUsername(req.username());
@@ -67,12 +66,10 @@ public class UserService {
         refreshCookie.setHttpOnly(true);
         httpRes.addCookie(refreshCookie);
 
-        if (httpReq.getCookies() != null) {
-            Optional<Cookie> cookieOptional = Arrays.stream(httpReq.getCookies()).filter(c -> c.getName().equals("Refresh-Token")).findFirst();
-            if (cookieOptional.isPresent()){
-                String refreshToken = cookieOptional.get().getValue();
-                INVALIDATED_REFRESH_TOKEN.put(refreshToken,true,jwtProcessor.getExpiration(refreshToken));
-            }
+        String token = jwtProcessor.extractToken(httpReq).getRefreshToken();
+        try {
+            jwtProcessor.invalidateRefreshToken(token);
+        } catch (JwtException | IllegalArgumentException ignored) {
         }
         return new Result<>(HttpStatus.OK,true);
     }

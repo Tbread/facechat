@@ -1,10 +1,14 @@
 package com.tbread.facechat.domain.authentication.jwt;
 
 import com.tbread.facechat.domain.authentication.jwt.entity.RefreshToken;
+import com.tbread.facechat.domain.common.TokenPackage;
 import com.tbread.facechat.domain.user.entity.User;
+import com.tbread.facechat.util.ExpiringHashMap;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,9 +17,7 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class JwtProcessor {
@@ -55,6 +57,7 @@ public class JwtProcessor {
 
     private final long ACCESS_TOKEN_VALID_TIME;
     private final long REFRESH_TOKEN_VALID_TIME;
+    private final static ExpiringHashMap<String, Boolean> INVALIDATED_REFRESH_TOKEN = new ExpiringHashMap<>();
 
     private final String secretKey;
 
@@ -124,5 +127,13 @@ public class JwtProcessor {
 
     private Jws<Claims> getClaims(String token){
         return Jwts.parser().decryptWith(Keys.hmacShaKeyFor(secretKey.getBytes())).build().parseSignedClaims(token);
+    }
+
+    public TokenPackage extractToken(HttpServletRequest httpReq){
+        return new TokenPackage(httpReq);
+    }
+
+    public void invalidateRefreshToken(String token){
+        INVALIDATED_REFRESH_TOKEN.put(token,true,getExpiration(token));
     }
 }
