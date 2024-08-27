@@ -1,4 +1,4 @@
-package com.tbread.facechat.domain.user.entity;
+package com.tbread.facechat.domain.user;
 
 import com.tbread.facechat.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
