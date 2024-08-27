@@ -1,5 +1,6 @@
 package com.tbread.facechat.domain.authentication.jwt;
 
+import com.tbread.facechat.domain.authentication.jwt.entity.RefreshToken;
 import com.tbread.facechat.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ClaimsBuilder;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
@@ -100,14 +102,20 @@ public class JwtProcessor {
     public String createToken(User user, JwtType type) {
         Date now = new Date();
         Date expiredAt = new Date(type.equals(JwtType.ACCESS) ? now.getTime() + ACCESS_TOKEN_VALID_TIME : now.getTime() + REFRESH_TOKEN_VALID_TIME);
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
                 .subject(user.getUsername())
                 .claims(Map.of("type",type))
                 .issuedAt(now)
                 .expiration(expiredAt)
                 .compact();
+        saveRefreshToken(user,token,expiredAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+        return token;
     }
 
 
+    private void saveRefreshToken(User user, String token, LocalDateTime expiredAt){
+        RefreshToken refreshToken = RefreshToken.builder().user(user).token(token).expiredAt(expiredAt).build();
+        refreshTokenRepository.save(refreshToken);
+    }
 }
