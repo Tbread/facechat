@@ -105,16 +105,18 @@ public class JwtProcessor {
         String token = Jwts.builder()
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
                 .subject(user.getUsername())
-                .claims(Map.of("type",type))
+                .claims(Map.of("type", type))
                 .issuedAt(now)
                 .expiration(expiredAt)
                 .compact();
-        saveRefreshToken(user,token,expiredAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+        if (type.equals(JwtType.REFRESH)) {
+            saveRefreshToken(user, token, expiredAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+        }
         return token;
     }
 
 
-    private void saveRefreshToken(User user, String token, LocalDateTime expiredAt){
+    private void saveRefreshToken(User user, String token, LocalDateTime expiredAt) {
         RefreshToken refreshToken = RefreshToken.builder().user(user).token(token).expiredAt(expiredAt).build();
         refreshTokenRepository.save(refreshToken);
     }
