@@ -1,5 +1,6 @@
 package com.tbread.facechat.domain.authentication.jwt;
 
+import com.tbread.facechat.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ClaimsBuilder;
 import io.jsonwebtoken.Jwts;
@@ -7,10 +8,12 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
@@ -49,16 +52,21 @@ public class JwtProcessor {
         ACCESS, REFRESH
     }
 
+    private final RefreshTokenRepository refreshTokenRepository;
+
     private final long ACCESS_TOKEN_VALID_TIME;
     private final long REFRESH_TOKEN_VALID_TIME;
 
     private final String secretKey;
 
+    @Autowired
     public JwtProcessor(@Value("${jwt.validate.time.access:#{null}}") String accessValidTime,
                         @Value("${jwt.validate.time.access.unit:#{null}}") String accessValidTimeUnit,
                         @Value("${jwt.validate.time.refresh:#{null}}") String refreshValidTime,
                         @Value("${jwt.validate.time.refresh.unit:#{null}}") String refreshValidTimeUnit,
-                        @Value("${jwt.signing.secret:#{null}}") String rawSecretKey) {
+                        @Value("${jwt.signing.secret:#{null}}") String rawSecretKey,
+                        RefreshTokenRepository refreshTokenRepository) {
+        this.refreshTokenRepository = refreshTokenRepository;
 
         try {
             int parsedAccessValidTime = Integer.parseInt(accessValidTime);
@@ -89,14 +97,15 @@ public class JwtProcessor {
     }
 
 
-    public String createToken(String username, JwtType type) {
+    public String createToken(User user, JwtType type) {
         Date now = new Date();
+        Date expiredAt = new Date(type.equals(JwtType.ACCESS) ? now.getTime() + ACCESS_TOKEN_VALID_TIME : now.getTime() + REFRESH_TOKEN_VALID_TIME);
         return Jwts.builder()
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .subject(username)
+                .subject(user.getUsername())
                 .claims(Map.of("type",type))
                 .issuedAt(now)
-                .expiration(new Date(type.equals(JwtType.ACCESS) ? now.getTime() + ACCESS_TOKEN_VALID_TIME : now.getTime() + REFRESH_TOKEN_VALID_TIME))
+                .expiration(expiredAt)
                 .compact();
     }
 
