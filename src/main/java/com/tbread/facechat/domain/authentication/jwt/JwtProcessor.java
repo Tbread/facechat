@@ -118,9 +118,11 @@ public class JwtProcessor {
         refreshTokenRepository.save(refreshToken);
     }
 
-    public LocalDateTime getExpiration(String token){
-        Jws<Claims> claims =Jwts.parser().decryptWith(Keys.hmacShaKeyFor(secretKey.getBytes())).build().parseSignedClaims(token);
-        Date expiration = claims.getPayload().getExpiration();
-        return expiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    public Date getExpiration(String token){
+        return getClaims(token).getPayload().getExpiration();
+    }
+
+    private Jws<Claims> getClaims(String token){
+        return Jwts.parser().decryptWith(Keys.hmacShaKeyFor(secretKey.getBytes())).build().parseSignedClaims(token);
     }
 }
