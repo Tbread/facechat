@@ -6,7 +6,6 @@ import com.tbread.facechat.domain.user.dto.request.UsernameAndPasswordRequestDto
 import com.tbread.facechat.domain.user.dto.response.LoginResponseDto;
 import com.tbread.facechat.domain.user.entity.User;
 import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -37,16 +36,8 @@ public class UserService {
         String refreshToken = jwtProcessor.createToken(userOptional.get(), JwtProcessor.JwtType.REFRESH);
         String accessToken = jwtProcessor.createToken(userOptional.get(), JwtProcessor.JwtType.ACCESS);
 
-        Cookie accessCookie = new Cookie("Access-Token", accessToken);
-        accessCookie.setPath("/");
-        accessCookie.setHttpOnly(true);
-        httpRes.addCookie(accessCookie);
-
-        Cookie refreshCookie = new Cookie("Refresh-Token", refreshToken);
-        refreshCookie.setPath("/");
-        refreshCookie.setHttpOnly(true);
-        httpRes.addCookie(refreshCookie);
-
+        jwtProcessor.setJwtCookie(httpRes,accessToken, JwtProcessor.JwtType.ACCESS);
+        jwtProcessor.setJwtCookie(httpRes,refreshToken, JwtProcessor.JwtType.REFRESH);
         //백엔드 - 프론트서버의 비 분리 사용으로 편의성을 위해 쿠키로 설정, 추후 필터체인으로 쿠키 관리 필요
         return new Result<>(HttpStatus.OK, new LoginResponseDto(refreshToken, accessToken), true);
     }
