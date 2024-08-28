@@ -1,8 +1,9 @@
 package com.tbread.facechat.domain.authentication.jwt;
 
 import com.tbread.facechat.domain.authentication.jwt.entity.RefreshToken;
+import com.tbread.facechat.domain.authentication.userdetails.UserDetailsImpl;
+import com.tbread.facechat.domain.authentication.userdetails.UserDetailsServiceImpl;
 import com.tbread.facechat.domain.common.TokenPackage;
-import com.tbread.facechat.domain.user.UserRepository;
 import com.tbread.facechat.domain.user.entity.User;
 import com.tbread.facechat.util.ExpiringHashMap;
 import io.jsonwebtoken.Claims;
@@ -15,7 +16,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -23,7 +25,6 @@ import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 
 @Component
 public class JwtProcessor {
@@ -69,7 +70,7 @@ public class JwtProcessor {
     }
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final UserRepository userRepository;
+    private final UserDetailsServiceImpl userDetailsService;
 
     private final long ACCESS_TOKEN_VALID_TIME;
     private final long REFRESH_TOKEN_VALID_TIME;
@@ -84,9 +85,9 @@ public class JwtProcessor {
                         @Value("${jwt.validate.time.refresh.unit:#{null}}") String refreshValidTimeUnit,
                         @Value("${jwt.signing.secret:#{null}}") String rawSecretKey,
                         RefreshTokenRepository refreshTokenRepository,
-                        UserRepository userRepository) {
+                        UserDetailsServiceImpl userDetailsService) {
         this.refreshTokenRepository = refreshTokenRepository;
-        this.userRepository = userRepository;
+        this.userDetailsService = userDetailsService;
 
         try {
             int parsedAccessValidTime = Integer.parseInt(accessValidTime);
@@ -180,12 +181,9 @@ public class JwtProcessor {
         httpRes.addCookie(refreshCookie);
     }
 
-    public User extractUserFromToken(String token) {
+    public UserDetailsImpl extractUserDetails(String token) {
         String username = getClaims(token).getPayload().getSubject();
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        return userOptional.orElseThrow(() ->
-                new UsernameNotFoundException("The token was parsed successfully, but a non-existent username was returned. Caused By: " + username)
-        );
+        return userDetailsService.loadUserByUsername(username);
     }
 
     public void setJwtCookie(HttpServletResponse httpRes, String token, JwtType type) {
@@ -193,5 +191,10 @@ public class JwtProcessor {
         tokenCookie.setPath("/");
         tokenCookie.setHttpOnly(true);
         httpRes.addCookie(tokenCookie);
+    }
+
+    public Authentication getAuthentication(String token) {
+        UserDetailsImpl userDetails = userDetailsService.loadUserByUsername(extractUserDetails(token).getUsername());
+        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 }
