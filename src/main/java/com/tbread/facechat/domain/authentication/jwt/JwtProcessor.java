@@ -2,6 +2,7 @@ package com.tbread.facechat.domain.authentication.jwt;
 
 import com.tbread.facechat.domain.authentication.jwt.entity.RefreshToken;
 import com.tbread.facechat.domain.common.TokenPackage;
+import com.tbread.facechat.domain.user.UserRepository;
 import com.tbread.facechat.domain.user.entity.User;
 import com.tbread.facechat.util.ExpiringHashMap;
 import io.jsonwebtoken.Claims;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class JwtProcessor {
@@ -53,10 +56,19 @@ public class JwtProcessor {
     }
 
     public enum JwtType {
-        ACCESS, REFRESH
+        ACCESS("Access-Token"), REFRESH("Refresh-Token");
+        private String cookieName;
+        JwtType(String cookieName){
+            this.cookieName = cookieName;
+        }
+
+        public String getCookieName(){
+            return this.cookieName;
+        }
     }
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserRepository userRepository;
 
     private final long ACCESS_TOKEN_VALID_TIME;
     private final long REFRESH_TOKEN_VALID_TIME;
@@ -70,8 +82,10 @@ public class JwtProcessor {
                         @Value("${jwt.validate.time.refresh:#{null}}") String refreshValidTime,
                         @Value("${jwt.validate.time.refresh.unit:#{null}}") String refreshValidTimeUnit,
                         @Value("${jwt.signing.secret:#{null}}") String rawSecretKey,
-                        RefreshTokenRepository refreshTokenRepository) {
+                        RefreshTokenRepository refreshTokenRepository,
+                        UserRepository userRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
+        this.userRepository = userRepository;
 
         try {
             int parsedAccessValidTime = Integer.parseInt(accessValidTime);
@@ -124,23 +138,23 @@ public class JwtProcessor {
         refreshTokenRepository.save(refreshToken);
     }
 
-    public Date getExpiration(String token){
+    public Date getExpiration(String token) {
         return getClaims(token).getPayload().getExpiration();
     }
 
-    private Jws<Claims> getClaims(String token){
+    private Jws<Claims> getClaims(String token) {
         return Jwts.parser().decryptWith(Keys.hmacShaKeyFor(secretKey.getBytes())).build().parseSignedClaims(token);
     }
 
-    public TokenPackage extractToken(HttpServletRequest httpReq){
+    public TokenPackage extractToken(HttpServletRequest httpReq) {
         return new TokenPackage(httpReq);
     }
 
-    public void invalidateRefreshToken(String token){
-        INVALIDATED_REFRESH_TOKEN.put(token,true,getExpiration(token));
+    public void invalidateRefreshToken(String token) {
+        INVALIDATED_REFRESH_TOKEN.put(token, true, getExpiration(token));
     }
 
-    public boolean isValidate(String token){
+    public boolean isValidate(String token) {
         try {
             return !getClaims(token).getPayload().getExpiration().before(new Date());
         } catch (Exception e) {
@@ -148,20 +162,32 @@ public class JwtProcessor {
         }
     }
 
-    public boolean isInvalidatedToken(TokenPackage tokenPackage){
+    public boolean isInvalidatedToken(TokenPackage tokenPackage) {
         return INVALIDATED_REFRESH_TOKEN.contains(tokenPackage.getRefreshToken());
     }
 
-    public void clearJwtCookies(HttpServletResponse httpRes){
-        Cookie accessCookie = new Cookie("Access-Token", null);
+    public void clearJwtCookies(HttpServletResponse httpRes) {
+        Cookie accessCookie = new Cookie(JwtType.ACCESS.getCookieName(), null);
         accessCookie.setMaxAge(0);
         accessCookie.setPath("/");
         accessCookie.setHttpOnly(true);
         httpRes.addCookie(accessCookie);
-        Cookie refreshCookie = new Cookie("Refresh-Token", null);
+        Cookie refreshCookie = new Cookie(JwtType.REFRESH.getCookieName(), null);
         refreshCookie.setMaxAge(0);
         refreshCookie.setPath("/");
         refreshCookie.setHttpOnly(true);
         httpRes.addCookie(refreshCookie);
+    }
+
+    public User extractUserFromToken(String token) {
+        Optional<User> userOptional = userRepository.findByUsername(getClaims(token).getPayload().getSubject());
+        return userOptional.orElseThrow(() -> new UsernameNotFoundException("The token was parsed successfully, but a non-existent username was returned."));
+    }
+
+    public void setJwtCookie(HttpServletResponse httpRes,String token,JwtType type){
+        Cookie tokenCookie = new Cookie(type.getCookieName(), token);
+        tokenCookie.setPath("/");
+        tokenCookie.setHttpOnly(true);
+        httpRes.addCookie(tokenCookie);
     }
 }
