@@ -2,11 +2,9 @@ package com.tbread.facechat.domain.user;
 
 import com.tbread.facechat.domain.authentication.jwt.JwtProcessor;
 import com.tbread.facechat.domain.common.Result;
-import com.tbread.facechat.domain.common.TokenPackage;
 import com.tbread.facechat.domain.user.dto.request.UsernameAndPasswordRequestDto;
 import com.tbread.facechat.domain.user.dto.response.LoginResponseDto;
 import com.tbread.facechat.domain.user.entity.User;
-import com.tbread.facechat.util.ExpiringHashMap;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 @Service
@@ -55,17 +52,7 @@ public class UserService {
     }
 
     public Result logout(HttpServletRequest httpReq, HttpServletResponse httpRes) {
-        Cookie accessCookie = new Cookie("Access-Token", null);
-        accessCookie.setMaxAge(0);
-        accessCookie.setPath("/");
-        accessCookie.setHttpOnly(true);
-        httpRes.addCookie(accessCookie);
-        Cookie refreshCookie = new Cookie("Refresh-Token", null);
-        refreshCookie.setMaxAge(0);
-        refreshCookie.setPath("/");
-        refreshCookie.setHttpOnly(true);
-        httpRes.addCookie(refreshCookie);
-
+        jwtProcessor.clearJwtCookies(httpRes);
         String token = jwtProcessor.extractToken(httpReq).getRefreshToken();
         try {
             jwtProcessor.invalidateRefreshToken(token);
