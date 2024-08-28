@@ -4,20 +4,23 @@ import com.tbread.facechat.domain.authentication.jwt.entity.RefreshToken;
 import com.tbread.facechat.domain.common.TokenPackage;
 import com.tbread.facechat.domain.user.entity.User;
 import com.tbread.facechat.util.ExpiringHashMap;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Base64;
+import java.util.Date;
+import java.util.Map;
 
 @Component
 public class JwtProcessor {
@@ -135,5 +138,30 @@ public class JwtProcessor {
 
     public void invalidateRefreshToken(String token){
         INVALIDATED_REFRESH_TOKEN.put(token,true,getExpiration(token));
+    }
+
+    public boolean isValidate(String token){
+        try {
+            return !getClaims(token).getPayload().getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isInvalidatedToken(TokenPackage tokenPackage){
+        return INVALIDATED_REFRESH_TOKEN.contains(tokenPackage.getRefreshToken());
+    }
+
+    public void clearJwtCookies(HttpServletResponse httpRes){
+        Cookie accessCookie = new Cookie("Access-Token", null);
+        accessCookie.setMaxAge(0);
+        accessCookie.setPath("/");
+        accessCookie.setHttpOnly(true);
+        httpRes.addCookie(accessCookie);
+        Cookie refreshCookie = new Cookie("Refresh-Token", null);
+        refreshCookie.setMaxAge(0);
+        refreshCookie.setPath("/");
+        refreshCookie.setHttpOnly(true);
+        httpRes.addCookie(refreshCookie);
     }
 }
