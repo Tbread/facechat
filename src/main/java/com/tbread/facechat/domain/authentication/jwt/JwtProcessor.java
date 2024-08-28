@@ -58,11 +58,12 @@ public class JwtProcessor {
     public enum JwtType {
         ACCESS("Access-Token"), REFRESH("Refresh-Token");
         private String cookieName;
-        JwtType(String cookieName){
+
+        JwtType(String cookieName) {
             this.cookieName = cookieName;
         }
 
-        public String getCookieName(){
+        public String getCookieName() {
             return this.cookieName;
         }
     }
@@ -180,11 +181,14 @@ public class JwtProcessor {
     }
 
     public User extractUserFromToken(String token) {
-        Optional<User> userOptional = userRepository.findByUsername(getClaims(token).getPayload().getSubject());
-        return userOptional.orElseThrow(() -> new UsernameNotFoundException("The token was parsed successfully, but a non-existent username was returned."));
+        String username = getClaims(token).getPayload().getSubject();
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        return userOptional.orElseThrow(() ->
+                new UsernameNotFoundException("The token was parsed successfully, but a non-existent username was returned. Caused By: " + username)
+        );
     }
 
-    public void setJwtCookie(HttpServletResponse httpRes,String token,JwtType type){
+    public void setJwtCookie(HttpServletResponse httpRes, String token, JwtType type) {
         Cookie tokenCookie = new Cookie(type.getCookieName(), token);
         tokenCookie.setPath("/");
         tokenCookie.setHttpOnly(true);
