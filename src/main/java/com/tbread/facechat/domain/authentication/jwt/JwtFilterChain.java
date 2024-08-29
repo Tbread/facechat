@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 public class JwtFilterChain extends GenericFilterBean {
@@ -23,7 +24,7 @@ public class JwtFilterChain extends GenericFilterBean {
         HttpServletRequest httpReq = (HttpServletRequest) request;
         HttpServletResponse httpRes = (HttpServletResponse) response;
         TokenPackage tokenPackage = jwtProcessor.extractToken(httpReq);
-        if (!tokenPackage.getRefreshToken().isEmpty() && !tokenPackage.getAccessToken().isEmpty()) {
+        if (Objects.nonNull(tokenPackage.getRefreshToken()) && Objects.nonNull(tokenPackage.getAccessToken())) {
             if (jwtProcessor.isValidate(tokenPackage.getAccessToken())) {
                 //액세스 토큰 비만료
                 Authentication authentication = jwtProcessor.getAuthentication(tokenPackage.getAccessToken());
