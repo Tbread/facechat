@@ -2,6 +2,7 @@ package com.tbread.facechat.domain.user.entity;
 
 import com.tbread.facechat.domain.common.Timestamped;
 import jakarta.persistence.*;
+import lombok.Builder;
 
 @Entity
 @Table(name = "user_nickname")
@@ -18,6 +19,12 @@ public class UserNickname extends Timestamped {
     private User user;
 
     public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    @Builder
+    public UserNickname(User user,String nickname){
+        this.user = user;
         this.nickname = nickname;
     }
 }
