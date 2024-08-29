@@ -8,6 +8,7 @@ import com.tbread.facechat.domain.user.entity.User;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +26,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProcessor jwtProcessor;
 
+    @Transactional
     public Result<LoginResponseDto> login(HttpServletResponse httpRes, UsernameAndPasswordRequestDto req) {
         Optional<User> userOptional = userRepository.findByUsername(req.username());
         if (userOptional.isEmpty()) {
@@ -39,6 +41,7 @@ public class UserService {
         jwtProcessor.setJwtCookie(httpRes,accessToken, JwtProcessor.JwtType.ACCESS);
         jwtProcessor.setJwtCookie(httpRes,refreshToken, JwtProcessor.JwtType.REFRESH);
         //백엔드 - 프론트서버의 비 분리 사용으로 편의성을 위해 쿠키로 설정, 추후 필터체인으로 쿠키 관리 필요
+        userOptional.get().updateLastLoginAt();
         return new Result<>(HttpStatus.OK, new LoginResponseDto(refreshToken, accessToken), true);
     }
 
