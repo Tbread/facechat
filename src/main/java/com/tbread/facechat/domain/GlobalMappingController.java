@@ -12,4 +12,7 @@ public class GlobalMappingController {
     String login(){
         return "login";
     }
+
+    @RequestMapping("signup")
+    String signup(){return "signup";}
 }
