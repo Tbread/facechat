@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class GlobalMappingController {
 
-    @RequestMapping("login")
+    @RequestMapping("account/sign_in")
     String login(){
         return "login";
     }
+    //로그인
 
-    @RequestMapping("signup")
+    @RequestMapping("account/signup")
     String signup(){return "signup";}
+    //회원가입
 }

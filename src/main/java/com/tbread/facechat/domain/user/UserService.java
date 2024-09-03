@@ -62,10 +62,10 @@ public class UserService {
         //프론트상 중복확인류 로직 모두 생략
         Optional<User> userOptional = userRepository.findByUsername(req.username());
         if (userOptional.isPresent()){
-            return new Result<>("이미 존재하는 아이디입니다.",HttpStatus.OK,false);
+            return new Result<>("이미 존재하는 아이디입니다.",HttpStatus.BAD_REQUEST,false);
         }
         if (userNicknameRepository.existsByNickname(req.nickname())){
-            return new Result<>("이미 존재하는 닉네임입니다.",HttpStatus.OK,false);
+            return new Result<>("이미 존재하는 닉네임입니다.",HttpStatus.BAD_REQUEST,false);
         }
         User user = User.builder().username(req.username()).password(req.password()).build();
         userRepository.save(user);

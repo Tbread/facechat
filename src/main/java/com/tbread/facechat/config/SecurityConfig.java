@@ -43,7 +43,10 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable);
         http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
         http.authorizeHttpRequests(request ->
-                                request.requestMatchers("**").permitAll()
+                                request
+                                        .requestMatchers("/js/**").permitAll()
+                                        .requestMatchers("/user/**").permitAll()
+                                        .requestMatchers("/account/**").permitAll()
                         //임시 허용
                 )
                 .addFilterBefore(new JwtFilterChain(jwtProcessor), UsernamePasswordAuthenticationFilter.class);
