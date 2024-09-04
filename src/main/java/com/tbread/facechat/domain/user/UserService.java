@@ -67,7 +67,7 @@ public class UserService {
         if (userNicknameRepository.existsByNickname(req.nickname())){
             return new Result<>("이미 존재하는 닉네임입니다.",HttpStatus.BAD_REQUEST,false);
         }
-        User user = User.builder().username(req.username()).password(req.password()).build();
+        User user = User.builder().username(req.username()).password(passwordEncoder.encode(req.password())).build();
         userRepository.save(user);
         UserNickname userNickname = UserNickname.builder().user(user).nickname(req.nickname()).build();
         userNicknameRepository.save(userNickname);
