@@ -47,6 +47,9 @@ public class SecurityConfig {
                                         .requestMatchers("/js/**").permitAll()
                                         .requestMatchers("/user/**").permitAll()
                                         .requestMatchers("/account/**").permitAll()
+                                        .requestMatchers("/").permitAll()
+                                        .requestMatchers("/h2-console").permitAll()
+                                        .requestMatchers("/h2-console/**").permitAll()
                         //임시 허용
                 )
                 .addFilterBefore(new JwtFilterChain(jwtProcessor), UsernamePasswordAuthenticationFilter.class);
