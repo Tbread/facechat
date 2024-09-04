@@ -25,7 +25,7 @@ function postSignIn(req) {
                 alert(data.message)
                 return
             }
-            window.location.href="/account/sign_in"
+            window.location.href="/"
         }
     })
 }

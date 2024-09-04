@@ -7,9 +7,6 @@ import com.tbread.facechat.domain.user.dto.request.UsernameAndPasswordRequestDto
 import com.tbread.facechat.domain.user.dto.response.LoginResponseDto;
 import com.tbread.facechat.domain.user.entity.User;
 import com.tbread.facechat.domain.user.entity.UserNickname;
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,7 +26,7 @@ public class UserService {
     private final JwtProcessor jwtProcessor;
 
     @Transactional
-    public Result<LoginResponseDto> login(HttpServletResponse httpRes, UsernameAndPasswordRequestDto req) {
+    public Result<LoginResponseDto> login(UsernameAndPasswordRequestDto req) {
         Optional<User> userOptional = userRepository.findByUsername(req.username());
         if (userOptional.isEmpty()) {
             return new Result<>("잘못된 아이디 또는 패스워드입니다.", HttpStatus.BAD_REQUEST, false);
@@ -39,22 +36,8 @@ public class UserService {
         }
         String refreshToken = jwtProcessor.createToken(userOptional.get(), JwtProcessor.JwtType.REFRESH);
         String accessToken = jwtProcessor.createToken(userOptional.get(), JwtProcessor.JwtType.ACCESS);
-
-        jwtProcessor.setJwtCookie(httpRes,accessToken, JwtProcessor.JwtType.ACCESS);
-        jwtProcessor.setJwtCookie(httpRes,refreshToken, JwtProcessor.JwtType.REFRESH);
-        //백엔드 - 프론트서버의 비 분리 사용으로 편의성을 위해 쿠키로 설정, 추후 필터체인으로 쿠키 관리 필요
         userOptional.get().updateLastLoginAt();
         return new Result<>(HttpStatus.OK, new LoginResponseDto(refreshToken, accessToken), true);
-    }
-
-    public Result logout(HttpServletRequest httpReq, HttpServletResponse httpRes) {
-        jwtProcessor.clearJwtCookies(httpRes);
-        String token = jwtProcessor.extractToken(httpReq).getRefreshToken();
-        try {
-            jwtProcessor.invalidateRefreshToken(token);
-        } catch (JwtException | IllegalArgumentException ignored) {
-        }
-        return new Result<>(HttpStatus.OK,true);
     }
 
     @Transactional

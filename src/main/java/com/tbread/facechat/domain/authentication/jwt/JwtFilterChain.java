@@ -34,12 +34,12 @@ public class JwtFilterChain extends GenericFilterBean {
                 if (jwtProcessor.isValidate(tokenPackage.getRefreshToken()) && !jwtProcessor.isInvalidatedToken(tokenPackage)) {
                     //리프레시 토큰 비만료
                     String newAccessToken = jwtProcessor.createToken(jwtProcessor.extractUserDetails(tokenPackage.getRefreshToken()).getUser(), JwtProcessor.JwtType.ACCESS);
-                    jwtProcessor.setJwtCookie(httpRes, newAccessToken, JwtProcessor.JwtType.ACCESS);
+                    httpRes.addCookie(jwtProcessor.setJwtCookie(newAccessToken, JwtProcessor.JwtType.ACCESS));
                     Authentication authentication = jwtProcessor.getAuthentication(newAccessToken);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
-                    //리프레시 토큰 만료
-                    jwtProcessor.clearJwtCookies(httpRes);
+                    httpRes.addCookie(jwtProcessor.clearRefreshCookie());
+                    httpRes.addCookie(jwtProcessor.clearAccessCookie());
                 }
             }
         }

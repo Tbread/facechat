@@ -12,7 +12,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -145,7 +144,7 @@ public class JwtProcessor {
     }
 
     private Jws<Claims> getClaims(String token) {
-        return Jwts.parser().decryptWith(Keys.hmacShaKeyFor(secretKey.getBytes())).build().parseSignedClaims(token);
+        return Jwts.parser().verifyWith(Keys.hmacShaKeyFor(secretKey.getBytes())).build().parseSignedClaims(token);
     }
 
     public TokenPackage extractToken(HttpServletRequest httpReq) {
@@ -168,17 +167,20 @@ public class JwtProcessor {
         return INVALIDATED_REFRESH_TOKEN.contains(tokenPackage.getRefreshToken());
     }
 
-    public void clearJwtCookies(HttpServletResponse httpRes) {
+    public Cookie clearAccessCookie() {
         Cookie accessCookie = new Cookie(JwtType.ACCESS.getCookieName(), null);
         accessCookie.setMaxAge(0);
         accessCookie.setPath("/");
         accessCookie.setHttpOnly(true);
-        httpRes.addCookie(accessCookie);
+        return accessCookie;
+    }
+
+    public Cookie clearRefreshCookie(){
         Cookie refreshCookie = new Cookie(JwtType.REFRESH.getCookieName(), null);
         refreshCookie.setMaxAge(0);
         refreshCookie.setPath("/");
         refreshCookie.setHttpOnly(true);
-        httpRes.addCookie(refreshCookie);
+        return refreshCookie;
     }
 
     public UserDetailsImpl extractUserDetails(String token) {
@@ -186,11 +188,12 @@ public class JwtProcessor {
         return userDetailsService.loadUserByUsername(username);
     }
 
-    public void setJwtCookie(HttpServletResponse httpRes, String token, JwtType type) {
+    public Cookie setJwtCookie(String token, JwtType type) {
         Cookie tokenCookie = new Cookie(type.getCookieName(), token);
         tokenCookie.setPath("/");
         tokenCookie.setHttpOnly(true);
-        httpRes.addCookie(tokenCookie);
+        tokenCookie.setMaxAge(Math.toIntExact(type.equals(JwtType.ACCESS) ? ACCESS_TOKEN_VALID_TIME/1000 : REFRESH_TOKEN_VALID_TIME/1000));
+        return tokenCookie;
     }
 
     public Authentication getAuthentication(String token) {
