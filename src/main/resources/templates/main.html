@@ -5,37 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .menu-bar {
-            border: 2px solid orange;
-            padding: 10px;
-            display: flex;
-            justify-content: space-around;
-        }
-        .auth-buttons, .nickname-logout {
-            border: 2px solid blue;
-            padding: 10px;
-            text-align: center;
-        }
-        .list-section {
-            border: 2px solid purple;
-            padding: 20px;
-            margin-top: 20px;
-            height: 400px;
-            overflow-y: auto;
-        }
-        .pagination-bar {
-            border: 2px solid yellow;
-            padding: 10px;
-            text-align: center;
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
 
 <!-- 주황색 네모칸 - 메뉴 -->
-<div class="menu-bar">
+<div style="display: flex;justify-content: space-between;align-items: center;width: 100%">
+<div class="menu-bar" style="text-align: center;flex: 1;">
     <a href="#" class="btn btn-outline-secondary">Menu 1</a>
     <a href="#" class="btn btn-outline-secondary">Menu 2</a>
     <a href="#" class="btn btn-outline-secondary">Menu 3</a>
@@ -43,17 +18,11 @@
 
 <!-- 파란색 네모칸 - 로그인/회원가입 또는 닉네임/로그아웃 -->
 <div class="d-flex justify-content-end auth-buttons">
-    <!-- 로그인/회원가입 -->
-    <button class="btn btn-primary me-2">Login</button>
-    <button class="btn btn-secondary">Sign Up</button>
-
-    <!-- 로그인 시 보여질 내용 (주석처리된 부분) -->
-    <!--
     <div class="nickname-logout">
-        <span>Nickname</span>
+        <th:span th:text="${nickname}"></th:span>
         <button class="btn btn-danger ms-2">Logout</button>
     </div>
-    -->
+</div>
 </div>
 
 <!-- 보라색 네모칸 - 리스트 -->

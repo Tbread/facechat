@@ -3,8 +3,10 @@ package com.tbread.facechat.domain.user.entity;
 import com.tbread.facechat.domain.common.Timestamped;
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 @Entity
+@NoArgsConstructor
 @Table(name = "user_nickname")
 public class UserNickname extends Timestamped {
     @Id
@@ -26,5 +28,9 @@ public class UserNickname extends Timestamped {
     public UserNickname(User user,String nickname){
         this.user = user;
         this.nickname = nickname;
+    }
+
+    public String getNickname(){
+        return this.nickname;
     }
 }
