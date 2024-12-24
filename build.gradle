@@ -49,6 +49,16 @@ dependencies {
     //kms
     implementation group: 'org.kurento', name: 'kurento-client', version: '7.1.0'
     implementation group: 'org.kurento', name: 'kurento-utils-js', version: '7.1.0'
+
+    //webjar
+    implementation 'org.webjars:webjars-locator:0.52'
+    implementation 'org.webjars.bower:bootstrap:5.3.3'
+    implementation 'org.webjars.bower:demo-console:1.5.1'
+    implementation 'org.webjars.bower:adapter.js:6.4.0'
+    implementation 'org.webjars.bower:jquery:3.7.1'
+    implementation 'org.webjars.bower:ekko-lightbox:5.2.0'
+
+
 }
 
 tasks.named('test') {
