@@ -33,4 +33,9 @@ public class GlobalMappingController {
         }
         model.addAttribute("nickname",nicknameRepository.findByUser(userDetails.getUser()).get().getNickname());
         return "main";}
+
+    @RequestMapping("test")
+    String test(@AuthenticationPrincipal UserDetailsImpl userDetails, Model model){
+        return "test";
+    }
 }
