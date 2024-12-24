@@ -50,6 +50,11 @@ public class SecurityConfig {
                                         .requestMatchers("/").permitAll()
                                         .requestMatchers("/h2-console").permitAll()
                                         .requestMatchers("/h2-console/**").permitAll()
+                                        .requestMatchers("/test").permitAll()
+                                        .requestMatchers("/webjars/**").permitAll()
+                                        .requestMatchers("/facechat").permitAll()
+                                        .requestMatchers("/facechat/**").permitAll()
+                                        .requestMatchers("/error").permitAll()
                         //임시 허용
                 )
                 .addFilterBefore(new JwtFilterChain(jwtProcessor), UsernamePasswordAuthenticationFilter.class);
