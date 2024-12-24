@@ -1,17 +1,17 @@
 package com.tbread.facechat.kurento;
 
-import lombok.RequiredArgsConstructor;
 import org.kurento.client.KurentoClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-@RequiredArgsConstructor
 public class RoomManager {
     private final Logger log = LoggerFactory.getLogger(RoomManager.class);
 
+    @Autowired
     private KurentoClient kurento;
 
     private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<>();
