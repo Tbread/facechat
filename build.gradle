@@ -57,6 +57,8 @@ dependencies {
     implementation 'org.webjars.bower:adapter.js:6.4.0'
     implementation 'org.webjars.bower:jquery:3.7.1'
     implementation 'org.webjars.bower:ekko-lightbox:5.2.0'
+    implementation 'org.webjars.bower:webrtc-adapter:7.4.0'
+
 
 
 }
